@@ -1,11 +1,8 @@
-.idea
-.gradle
 build
 out
-gradle
-gradlew*
+gradle*
 target
 Dockerfile
-Readme.md
-.env
-.env.example
+crontab
+*.md
+.*
