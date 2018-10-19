@@ -1,7 +1,8 @@
 .idea
 .gradle
 build
+out
 gradle
 gradlew*
-src/main/resources/.env
+.env
 target

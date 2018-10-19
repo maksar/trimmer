@@ -17,7 +17,7 @@ Run [gradle](https://gradle.org/install/) `run` task.
 
 Or you can use Docker
 
-    $ docker build -t trimmer . && docker run -it --rm trimmer
+    $ docker build -t trimmer . && docker run -it --rm -v $PWD/.env:/app/.env trimmer
 
 ## Example output
 

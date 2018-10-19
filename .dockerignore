@@ -1,6 +1,11 @@
 .idea
 .gradle
 build
+out
 gradle
 gradlew*
 target
+Dockerfile
+Readme.md
+.env
+.env.example

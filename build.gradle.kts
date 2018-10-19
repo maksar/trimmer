@@ -25,12 +25,12 @@ repositories {
 }
 
 dependencies {
-    implementation("net.rcarz", "jira-client", "0.5")
-    implementation("io.github.cdimascio", "java-dotenv", "3.1.2")
+    implementation(kotlin("stdlib"))
+    implementation("com.github.shyiko.dotenv", "dotenv", "0.1.1")
     implementation("com.atlassian.jira", "jira-tests", "7.4.0")
-    implementation("com.atlassian.jira", "jira-core", "7.4.0").
-            exclude("jta", "jta").
-            exclude("jndi", "jndi")
-
+    implementation("com.atlassian.jira", "jira-core", "7.4.0") {
+        exclude("jta", "jta")
+        exclude("jndi", "jndi")
+    }
     compile("com.github.rcarz", "jira-client", "master")
 }
