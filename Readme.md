@@ -14,7 +14,11 @@ Edit configuration file by adding jira username and password to use.
 Run [gradle](https://gradle.org/install/) `run` task.
 
     $ gradle run
-    
+
+Or you can use Docker
+
+    $ docker build -t trimmer . && docker run -it --rm trimmer
+
 ## Example output
 
     Searching for issues in RESCARD.

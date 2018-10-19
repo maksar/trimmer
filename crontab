@@ -1,0 +1,2 @@
+# min hour dom month dow command
+0 * * * * cd /home/docker/trimmer && git pull && docker build -t trimmer . && docker run --rm trimmer
