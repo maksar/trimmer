@@ -4,10 +4,10 @@ Trims (removes spaces around) subjects of all Resource Cards and Project Cards.
 
 ## Configuration
 
-Edit configuration file by adding jira username and password to use.  
+Edit configuration file by adding jira username and password to use.
 
-    $ cp src/main/resources/.env.example src/main/resources/.env
-    $ vim src/main/resources/.env
+    $ cp .env.example .env
+    $ vim .env
 
 ## Running
 
