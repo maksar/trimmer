@@ -6,3 +6,4 @@ Dockerfile
 crontab
 *.md
 .*
+Makefile
