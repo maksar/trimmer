@@ -63,7 +63,7 @@
               mkdir $out
               tar xvf build/distributions/trimmer-1.0.tar --directory=$out --strip=1
               wrapProgram $out/bin/trimmer \
-                --set JAVA_HOME ${jre}
+                --set JAVA_HOME ${jre_headless}
             '';
           };
 

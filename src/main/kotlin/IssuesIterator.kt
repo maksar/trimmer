@@ -7,8 +7,8 @@ class IssuesIterator(private val jql: String, private val perPage: Int, private 
 
     override fun iterator(): Iterator<Issue> {
         return iterator {
-            println(jql)
             do {
+                print(".")
                 yieldAll(currentResult.issues)
                 currentResult = fetch(currentResult.startIndex + perPage)
             } while (currentResult.startIndex + perPage < currentResult.total)

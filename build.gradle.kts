@@ -10,6 +10,7 @@ plugins {
 
 application {
     mainClassName = "TrimmerKt"
+    applicationDefaultJvmArgs = listOf("-Dlog4j.configuration=non_existent_file")
 }
 
 repositories {

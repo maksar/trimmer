@@ -7,3 +7,4 @@ gradlew*
 .env
 target
 output
+.direnv
