@@ -1,9 +1,0 @@
-build
-out
-gradle*
-target
-Dockerfile
-crontab
-*.md
-.*
-Makefile

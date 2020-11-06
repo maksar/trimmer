@@ -1,44 +1,64 @@
-import com.atlassian.jira.issue.IssueFieldConstants.SUMMARY
 import com.atlassian.jira.jql.builder.JqlQueryBuilder
 import com.atlassian.jira.jql.builder.JqlQueryBuilder.newBuilder
 import com.atlassian.jira.jql.parser.DefaultJqlQueryParser
 import com.atlassian.jira.jql.util.JqlStringSupportImpl
 import com.atlassian.jira.mock.component.MockComponentWorker
+import com.atlassian.jira.rest.client.api.JiraRestClient
+import com.atlassian.jira.rest.client.api.domain.IssueFieldId
+import com.atlassian.jira.rest.client.api.domain.IssueFieldId.CREATED_FIELD
+import com.atlassian.jira.rest.client.api.domain.IssueFieldId.ISSUE_TYPE_FIELD
+import com.atlassian.jira.rest.client.api.domain.IssueFieldId.PROJECT_FIELD
+import com.atlassian.jira.rest.client.api.domain.IssueFieldId.STATUS_FIELD
+import com.atlassian.jira.rest.client.api.domain.IssueFieldId.SUMMARY_FIELD
+import com.atlassian.jira.rest.client.api.domain.IssueFieldId.UPDATED_FIELD
+import com.atlassian.jira.rest.client.api.domain.input.FieldInput
+import com.atlassian.jira.rest.client.api.domain.input.IssueInput.createWithFields
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory
 import com.atlassian.query.order.SortOrder.ASC
 import com.github.shyiko.dotenv.DotEnv
-import net.rcarz.jiraclient.BasicCredentials
-import net.rcarz.jiraclient.JiraClient
+import org.apache.log4j.LogManager
+import org.apache.log4j.spi.DefaultRepositorySelector
+import org.apache.log4j.spi.NOPLoggerRepository
+import org.slf4j.LoggerFactory
+import java.net.URI
 
-const val RESOURCE_CARDS = "RESCARD"
-const val PROJECT_CARDS = "PROJCARD"
+val dotenv: MutableMap<String, String> = DotEnv.load()
+val fields = listOf(
+    SUMMARY_FIELD,
+    ISSUE_TYPE_FIELD,
+    CREATED_FIELD,
+    UPDATED_FIELD,
+    PROJECT_FIELD,
+    STATUS_FIELD
+).map(IssueFieldId::id).toSet()
 
-const val PAGINATION_SIZE = 999
+val restClient: JiraRestClient = AsynchronousJiraRestClientFactory().createWithBasicHttpAuthentication(
+    URI(dotenv.getValue("TRIMMER_JIRA_URL")),
+    dotenv.getValue("TRIMMER_JIRA_USERNAME"),
+    dotenv.getValue("TRIMMER_JIRA_PASSWORD")
+)
 
-val dotenv = DotEnv.load()
-val jira = JiraClient(dotenv["JIRA_URL"], BasicCredentials(dotenv["JIRA_USERNAME"], dotenv["JIRA_PASSWORD"]))
+fun makeQuery(block: JqlQueryBuilder.() -> Unit): String =
+    JqlStringSupportImpl(DefaultJqlQueryParser()).generateJqlString(newBuilder().also { block(it) }.buildQuery())
 
-fun makeQuery(block: JqlQueryBuilder.() -> Unit) : String =
-        JqlStringSupportImpl(DefaultJqlQueryParser()).generateJqlString(newBuilder().also { block(it) }.buildQuery())
+fun main() {
+    LogManager.setRepositorySelector(DefaultRepositorySelector(NOPLoggerRepository()), null)
+    LoggerFactory::class.java.getDeclaredField("INITIALIZATION_STATE").also { it.isAccessible = true }.set(
+        LoggerFactory::class,
+        LoggerFactory::class.java.getDeclaredField("NOP_FALLBACK_INITIALIZATION").also { it.isAccessible = true }
+            .get(LoggerFactory::class)
+    )
+    MockComponentWorker().init()
 
-fun trim(project : String) {
-    println("Searching for issues in ${project}.")
-    jira.searchIssues(makeQuery {
-        where().project(project)
+    val projects = dotenv.getValue("TRIMMER_PROJECTS").split(",")
+    println("Searching for issues in ${projects}.")
+    IssuesIterator(makeQuery {
+        projects.fold(where()) { query, project -> query.or().project(project) }
         orderBy().createdDate(ASC)
-    }, SUMMARY, PAGINATION_SIZE).iterator().asSequence().toList().filter {
+    }, dotenv.getValue("TRIMMER_JIRA_PAGE_SIZE").toInt(), fields, restClient.searchClient).filter {
         it.summary.trim() != it.summary
-    }.also {
-        if (it.count() == 0) {
-            println("No issues in ${project}, that needs to be trimmed was found.")
-        } else {
-            println("Found ${it.count()} issues in ${project}, that needs to be trimmed.")
-        }
     }.forEach {
         println("Trimming ${it.key} with summary '${it.summary}'.")
-        it.update().field(SUMMARY, it.summary.trim()).execute()
+        restClient.issueClient.updateIssue(it.key, createWithFields(FieldInput(SUMMARY_FIELD, it.summary.trim())))
     }
-}
-fun main(args: Array<String>) {
-    MockComponentWorker().init()
-    listOf(RESOURCE_CARDS, PROJECT_CARDS).forEach(::trim)
 }

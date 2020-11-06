@@ -1,2 +1,8 @@
-rootProject.name = 'trimmer'
 
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'trimmer'

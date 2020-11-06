@@ -1,2 +1,0 @@
-# min hour dom month dow command
-45 * * * * cd /home/docker/trimmer && docker pull docker-registry.itransition.corp/trimmer:latest && docker run -it --rm -v $PWD/.env:/app/.env docker-registry.itransition.corp/trimmer:latest

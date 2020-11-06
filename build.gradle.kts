@@ -4,14 +4,8 @@ group = "com.itransition"
 version = "1.0"
 
 plugins {
-    kotlin("jvm") version "1.2.71"
+    kotlin("jvm") version "1.4.10"
     application
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
 }
 
 application {
@@ -21,16 +15,17 @@ application {
 repositories {
     jcenter()
     maven("https://packages.atlassian.com/maven/repository/public")
-    maven("https://jitpack.io")
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("com.github.shyiko.dotenv", "dotenv", "0.1.1")
-    implementation("com.atlassian.jira", "jira-tests", "7.4.0")
-    implementation("com.atlassian.jira", "jira-core", "7.4.0") {
+    implementation("com.atlassian.jira", "jira-tests", "8.13.1")
+    implementation("com.atlassian.jira", "jira-core", "8.13.1") {
         exclude("jta", "jta")
         exclude("jndi", "jndi")
+        exclude("com.octo.captcha", "jcaptcha")
+        exclude("com.octo.captcha", "jcaptcha-api")
     }
-    compile("com.github.rcarz", "jira-client", "master")
+    implementation("com.atlassian.jira", "jira-rest-java-client-core", "5.2.2")
 }

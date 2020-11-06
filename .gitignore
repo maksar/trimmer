@@ -6,3 +6,4 @@ gradle
 gradlew*
 .env
 target
+output
