@@ -4,7 +4,8 @@ build
 out
 gradle
 gradlew*
-.env
+.env*
+!.env.example
 target
 output
 .direnv
