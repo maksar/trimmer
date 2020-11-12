@@ -3,15 +3,16 @@ import com.atlassian.jira.rest.client.api.domain.Issue
 import com.atlassian.jira.rest.client.api.domain.SearchResult
 
 class IssuesIterator(private val jql: String, private val perPage: Int, private val fields: Set<String>, private val client: SearchRestClient) : Sequence<Issue> {
-    var currentResult = fetch(0)
 
     override fun iterator(): Iterator<Issue> {
         return iterator {
+            var currentIndex = -perPage
             do {
+                currentIndex += perPage
                 print(".")
+                val currentResult = fetch(currentIndex)
                 yieldAll(currentResult.issues)
-                currentResult = fetch(currentResult.startIndex + perPage)
-            } while (currentResult.startIndex + perPage < currentResult.total)
+            } while (currentIndex + perPage < currentResult.total)
         }
     }
 
