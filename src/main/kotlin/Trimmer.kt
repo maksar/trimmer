@@ -15,6 +15,8 @@ import com.atlassian.jira.rest.client.api.domain.input.IssueInput.createWithFiel
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory
 import com.atlassian.query.order.SortOrder.ASC
 import com.github.shyiko.dotenv.DotEnv
+import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang.StringUtils.normalizeSpace
 import org.apache.log4j.LogManager
 import org.apache.log4j.spi.DefaultRepositorySelector
 import org.apache.log4j.spi.NOPLoggerRepository
@@ -50,9 +52,9 @@ fun main() {
         dotenv.getValue("TRIMMER_PROJECTS").split(",").fold(where()) { query, project -> query.or().project(project) }
         orderBy().createdDate(ASC)
     }, dotenv.getValue("TRIMMER_JIRA_PAGE_SIZE").toInt(), fields, restClient.value.searchClient).filter {
-        it.summary.trim() != it.summary
+        normalizeSpace(it.summary.trim()) != it.summary
     }.forEach {
         println("\nTrimming ${it.key} with summary '${it.summary}'.")
-        restClient.value.issueClient.updateIssue(it.key, createWithFields(FieldInput(SUMMARY_FIELD, it.summary.trim())))
+        restClient.value.issueClient.updateIssue(it.key, createWithFields(FieldInput(SUMMARY_FIELD, normalizeSpace(it.summary.trim()))))
     }
 }
