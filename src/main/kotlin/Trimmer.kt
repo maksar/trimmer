@@ -3,6 +3,7 @@ import com.atlassian.jira.jql.builder.JqlQueryBuilder.newBuilder
 import com.atlassian.jira.jql.parser.DefaultJqlQueryParser
 import com.atlassian.jira.jql.util.JqlStringSupportImpl
 import com.atlassian.jira.mock.component.MockComponentWorker
+import com.atlassian.jira.rest.client.api.GetCreateIssueMetadataOptionsBuilder
 import com.atlassian.jira.rest.client.api.domain.IssueFieldId
 import com.atlassian.jira.rest.client.api.domain.IssueFieldId.CREATED_FIELD
 import com.atlassian.jira.rest.client.api.domain.IssueFieldId.ISSUE_TYPE_FIELD
@@ -40,6 +41,7 @@ val restClient = lazy {
         dotenv.getValue("TRIMMER_JIRA_PASSWORD")
     )
 }
+internal val fieldsMap = lazy { restClient.value.metadataClient.fields.get() }
 
 fun makeQuery(block: JqlQueryBuilder.() -> Unit): String =
     JqlStringSupportImpl(DefaultJqlQueryParser()).generateJqlString(newBuilder().also { block(it) }.buildQuery())
@@ -55,6 +57,20 @@ fun main() {
         normalizeSpace(it.summary.trim()) != it.summary
     }.forEach {
         println("\nTrimming ${it.key} with summary '${it.summary}'.")
-        restClient.value.issueClient.updateIssue(it.key, createWithFields(FieldInput(SUMMARY_FIELD, normalizeSpace(it.summary.trim()))))
+        restClient.value.issueClient.updateIssue(it.key, createWithFields(FieldInput(SUMMARY_FIELD, normalizeSpace(it.summary.trim())))).get()
+    }
+
+    dotenv.getValue("TRIMMER_PROJECTS_FIELDS").split(",").flatMap { it.split(":") }.zipWithNext().forEach { (projectName, fieldName) ->
+        val field = fieldsMap.value.first { it.name == fieldName }
+
+        IssuesIterator(makeQuery {
+            where().project(projectName)
+            orderBy().createdDate(ASC)
+        }, dotenv.getValue("TRIMMER_JIRA_PAGE_SIZE").toInt(), fields.plus(field.id), restClient.value.searchClient).filter {
+            it.getField(field.id)?.value?.toString()?.let { value -> normalizeSpace(value.trim()) != value } == true
+        }.forEach {
+            println("\nTrimming ${it.key} with $fieldName '${it.getField(field.id)?.value}'.")
+            restClient.value.issueClient.updateIssue(it.key, createWithFields(FieldInput(field.id, normalizeSpace(it.getField(field.id)?.value.toString().trim())))).get()
+        }
     }
 }
